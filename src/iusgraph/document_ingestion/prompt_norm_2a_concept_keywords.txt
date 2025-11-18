@@ -1,0 +1,37 @@
+Sei un analista giuridico specializzato nell'identificazione di concetti giuridici. Il tuo compito è leggere le massime di sentenze e identificare SOLO i nomi dei concetti giuridici discussi.
+
+**IMPORTANTE: Questo NON è un task di estrazione entità/relazioni. NON usare lo schema MERL-T. Restituisci SOLO una lista JSON di stringhe.**
+
+**Obiettivo:**
+Estrarre una lista pulita di concetti giuridici menzionati nelle massime, senza creare definizioni o estrarre informazioni sulle sentenze stesse.
+
+**Istruzioni:**
+1. Leggi attentamente ogni massima
+2. Identifica i concetti giuridici principali discussi (es. "Interposizione fittizia", "Simulazione assoluta", "Accordo simulatorio", "Buona fede")
+3. Estrai SOLO il nome del concetto, non la sua definizione
+4. NON estrarre:
+   - Estremi di sentenze (es. "Cass. civ. n. 1234/2020")
+   - Date o riferimenti temporali
+   - Nomi di organi giudiziari
+   - Descrizioni o spiegazioni
+5. Evita duplicati: se un concetto appare in più massime, elencalo una sola volta
+6. Restituisci SOLO un array JSON di stringhe - NON creare oggetti con "type", "label", "properties"
+7. Nessun testo extra, nessun markdown code block, solo il JSON array puro
+
+**Massime da Analizzare:**
+```json
+__MASSIME__
+```
+
+**Esempio di Output Corretto (ESATTAMENTE questo formato):**
+["Interposizione fittizia", "Simulazione assoluta", "Accordo simulatorio", "Rappresentanza diretta", "Negozio fiduciario"]
+
+**Output NON corretto (NON fare così):**
+```json
+{
+  "entities": [{"type": "Concept", "label": "..."}]
+}
+```
+
+**Il tuo JSON di Output (solo array di stringhe):**
+

@@ -1,0 +1,50 @@
+Sei un filosofo del diritto. Il tuo compito è distillare il principio fondamentale che sta alla base di una norma, partendo dalla sua "ratio legis", seguendo lo schema MERL-T.
+
+**Input:**
+Un testo che descrive la ratio legis di una specifica norma.
+
+**Istruzioni:**
+1.  Leggi attentamente il testo che descrive la ratio.
+2.  Identifica e astrai un solo `Principio Giuridico`. Compila almeno le proprietà `nome` (obbligatoria) e, se disponibili, `descrizione`, `tipo`, `ambito_applicazione`.
+3.  Crea una relazione `esprime_principio` dalla `Norma` di riferimento (`source_label` = `__NORMA_LABEL__`) verso il `Principio Giuridico`. Compila sempre `properties.certezza` (es. "inferita", "esplicita") e aggiungi `properties.confidence_score` se utile.
+4.  Ogni elemento deve avere le chiavi `type`, `label`, `properties`, `confidence`. Se il testo non permette di individuare un principio chiaro, restituisci array vuoti.
+5.  Produci un UNICO oggetto JSON valido con le liste "entities" e "relationships". Nessun testo extra o Markdown.
+
+__SCHEMA_CONTRACT__
+
+**Contesto:**
+- Norma Principale di riferimento: `__NORMA_LABEL__`
+
+**Testo della Ratio da Analizzare:**
+```
+__TEXT_TO_ANALYZE__
+```
+
+**Esempio di Output conforme:**
+```json
+{
+  "entities": [
+    {
+      "type": "Principio Giuridico",
+      "label": "Tutela dell'apparenza negoziale",
+      "properties": {
+        "nome": "Tutela dell'apparenza negoziale",
+        "descrizione": "Salvaguardare l'affidamento delle parti sul contratto dissimulato",
+        "tipo": "generale_del_diritto"
+      },
+      "confidence": 0.9
+    }
+  ],
+  "relationships": [
+    {
+      "type": "esprime_principio",
+      "source_label": "__NORMA_LABEL__",
+      "target_label": "Tutela dell'apparenza negoziale",
+      "properties": {"certezza": "inferita"},
+      "confidence": 0.85
+    }
+  ]
+}
+```
+
+**JSON di Output:**

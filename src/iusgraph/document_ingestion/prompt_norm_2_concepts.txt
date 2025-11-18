@@ -1,0 +1,84 @@
+Sei un ontologo del diritto. Il tuo compito è identificare i concetti giuridici fondamentali espressi in un testo normativo e nelle parole chiave ad esso associate, seguendo rigorosamente lo schema MERL-T.
+
+**Input:**
+Un oggetto JSON contenente:
+- `article_text`: testo dell'articolo di legge
+- `brocardi`: parole chiave dottrinali (brocardi latini)
+- `ratio`: ratio legis (finalità della norma)
+- `spiegazione`: spiegazione dottrinale dell'articolo
+- `concept_keywords`: lista di concetti identificati dalla giurisprudenza (da definire formalmente se rilevanti)
+
+**Istruzioni:**
+1.  Estrai i concetti giuridici ESPLICITI dal testo normativo (`article_text`), dalla `spiegazione` e dalla `ratio`. Questi sono concetti definiti direttamente o chiaramente discussi nel testo.
+2.  Per ogni keyword in `concept_keywords`, valuta se è rilevante per questa norma. Se sì, crea un nodo formale con una definizione basata sul contesto normativo.
+3.  Distingui tra due tipi di concetti:
+    - **Concetti espliciti** (confidence 0.90-0.95): definiti direttamente nel testo normativo o nella spiegazione
+    - **Concetti impliciti** (confidence 0.70-0.85): dedotti dalle keywords giurisprudenziali, rilevanti ma non esplicitamente definiti
+4.  Per ogni concetto, usa il tipo esatto `Concetto Giuridico` e popola:
+    - `nome` (obbligatorio): nome del concetto
+    - `definizione` (quando possibile): definizione basata sul testo
+    - `ambito_di_applicazione` (opzionale): contesto di applicazione
+    - `fonte`: "normativa" per concetti espliciti, "giurisprudenziale" per concetti impliciti
+5.  Per ogni concetto, crea una relazione `disciplina` che lo collega alla `Norma` principale:
+    - `source_label`: ESATTAMENTE `__NORMA_LABEL__`
+    - `target_label`: label del concetto
+    - `properties.certezza`: "esplicita" per concetti dal testo, "inferita" per keywords
+6.  Ogni entità deve avere `type`, `label`, `properties`, `confidence`. Ogni relazione deve avere `type`, `source_label`, `target_label`, `properties`, `confidence`.
+7.  Se il testo non contiene nuovi concetti, restituisci `{"entities": [], "relationships": []}`.
+8.  Produci un UNICO oggetto JSON valido con le liste "entities" e "relationships". Nessun commento o Markdown.
+
+__SCHEMA_CONTRACT__
+
+**Contesto:**
+- Norma Principale: `__NORMA_LABEL__`
+
+**Dati da Analizzare:**
+```json
+__JSON_DATA_TO_ANALYZE__
+```
+
+**Esempio di Output conforme:**
+```json
+{
+  "entities": [
+    {
+      "type": "Concetto Giuridico",
+      "label": "Simulazione Assoluta",
+      "properties": {
+        "nome": "Simulazione Assoluta",
+        "definizione": "Contratto in cui le parti non intendono concludere alcun negozio giuridico reale",
+        "fonte": "normativa"
+      },
+      "confidence": 0.92
+    },
+    {
+      "type": "Concetto Giuridico",
+      "label": "Interposizione fittizia",
+      "properties": {
+        "nome": "Interposizione fittizia",
+        "definizione": "Simulazione soggettiva in cui un soggetto interposto figura nel contratto al posto dell'interponente",
+        "fonte": "giurisprudenziale"
+      },
+      "confidence": 0.78
+    }
+  ],
+  "relationships": [
+    {
+      "type": "disciplina",
+      "source_label": "Art. 1414 c.c.",
+      "target_label": "Simulazione Assoluta",
+      "properties": {"certezza": "esplicita"},
+      "confidence": 0.9
+    },
+    {
+      "type": "disciplina",
+      "source_label": "Art. 1414 c.c.",
+      "target_label": "Interposizione fittizia",
+      "properties": {"certezza": "inferita"},
+      "confidence": 0.75
+    }
+  ]
+}
+```
+
+**JSON di Output:**

@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  neo4j:
+    image: neo4j:5.18.0 # Usiamo una versione specifica per la stabilità
+    container_name: iusgraph-neo4j
+    restart: unless-stopped
+    ports:
+      - "7474:7474" # Porta HTTP per il Neo4j Browser
+      - "7687:7687" # Porta Bolt per la connessione dal driver Python
+    volumes:
+      - iusgraph_neo4j_data:/data
+    environment:
+      # Imposta qui la tua password. Deve essere la stessa che metterai nel file .env
+      - NEO4J_AUTH=neo4j/merltgraph2025 
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
+      # Opzionale ma raccomandato: include la libreria APOC, molto utile per operazioni complesse
+      - NEO4J_PLUGINS=["apoc"] 
+
+volumes:
+  iusgraph_neo4j_data:
+    # Questo volume persisterà i dati del tuo database anche se il container viene rimosso e ricreato

@@ -1,0 +1,74 @@
+Sei un assistente di un giudice (massimario). Il tuo compito è analizzare una lista di "massime" (sintesi di sentenze) e strutturarle come nodi del grafo seguendo lo schema MERL-T.
+
+**Input:**
+Una lista di stringhe, dove ogni stringa è una massima relativa a una specifica norma.
+
+**Contesto Aggiuntivo:**
+Lista dei concetti giuridici già estratti dalla norma: `__EXTRACTED_CONCEPTS__`
+
+**Istruzioni:**
+1.  Per ogni massima, crea un nodo di tipo esatto `Atto Giudiziario`. Popola obbligatoriamente `properties.estremi` (anche sintetico) e `properties.descrizione` con il testo della massima; aggiungi quando possibile `organo_emittente`, `data`, `tipo`.
+2.  Usa una versione breve e descrittiva della massima come `label`.
+3.  Crea una relazione `interpreta` dal nuovo `Atto Giudiziario` alla `Norma` principale (`source_label` = label dell'atto, `target_label` = `__NORMA_LABEL__`). Imposta sempre `properties.tipo_interpretazione = "giurisprudenziale"` e aggiungi `properties.orientamento` quando deducibile (es. "estensiva").
+4.  **CONCORDANZA CONCETTI**: Per ogni sentenza, identifica quali concetti dalla lista `__EXTRACTED_CONCEPTS__` vengono discussi nella massima. Per ciascuno, crea una relazione:
+    - `type`: "discute"
+    - `source_label`: label della sentenza
+    - `target_label`: nome del concetto dalla lista (usa esattamente il nome dalla lista)
+    - `properties.rilevanza`: "primaria" se il concetto è centrale nella massima, "secondaria" se è solo menzionato
+    - `confidence`: 0.80-0.90
+5.  Ogni entità deve includere `type`, `label`, `properties`, `confidence`; ogni relazione `type`, `source_label`, `target_label`, `properties`, `confidence`.
+6.  Se una massima non aggiunge informazioni nuove, saltala.
+7.  Produci un UNICO oggetto JSON valido con le liste "entities" e "relationships". Nessun testo extra o Markdown.
+
+__SCHEMA_CONTRACT__
+
+**Contesto:**
+- Norma Principale di riferimento: `__NORMA_LABEL__`
+
+**Massime da Analizzare:**
+```json
+__JSON_DATA_TO_ANALYZE__
+```
+
+**Esempio di Output conforme:**
+```json
+{
+  "entities": [
+    {
+      "type": "Atto Giudiziario",
+      "label": "Cass. civ. n. 1234/2024",
+      "properties": {
+        "estremi": "Cassazione civile, sent. n. 1234/2024",
+        "descrizione": "<testo massima>",
+        "organo_emittente": "Corte di Cassazione"
+      },
+      "confidence": 0.9
+    }
+  ],
+  "relationships": [
+    {
+      "type": "interpreta",
+      "source_label": "Cass. civ. n. 1234/2024",
+      "target_label": "__NORMA_LABEL__",
+      "properties": {"tipo_interpretazione": "giurisprudenziale"},
+      "confidence": 0.88
+    },
+    {
+      "type": "discute",
+      "source_label": "Cass. civ. n. 1234/2024",
+      "target_label": "Simulazione Assoluta",
+      "properties": {"rilevanza": "primaria"},
+      "confidence": 0.85
+    },
+    {
+      "type": "discute",
+      "source_label": "Cass. civ. n. 1234/2024",
+      "target_label": "Interposizione fittizia",
+      "properties": {"rilevanza": "secondaria"},
+      "confidence": 0.82
+    }
+  ]
+}
+```
+
+**JSON di Output:**

@@ -1,0 +1,416 @@
+# ================================================================================
+# MERL-T PREPROCESSING: NER Pipeline Configuration
+# ================================================================================
+# Configuration for Legal Entity Recognition (NER) with 5-stage pipeline.
+# Adapted from legal-ner project. Every change is applied immediately without recompilation.
+# ================================================================================
+
+# ===================================
+# SECTION 1: AI MODELS
+# ===================================
+models:
+  entity_detector:
+    # Using DeepMount00/Italian_NER_XXL_v2 as primary NER model
+    primary: "DeepMount00/Italian_NER_XXL_v2"
+    fallback: "Babelscape/wikineural-multilingual-ner"
+    max_length: 256
+
+  legal_classifier:
+    primary: "dlicari/distil-ita-legal-bert"
+    embedding_max_length: 256
+
+  semantic_embeddings:
+    model: "dlicari/Italian-Legal-BERT"
+
+# ===================================
+# SECTION 2: CONFIDENCE THRESHOLDS
+# ===================================
+confidence_thresholds:
+  # Stage 1: Entity Detection
+  minimum_detection_confidence: 0.5
+
+  # Stage 2: Legal Classification
+  rule_based_priority_threshold: 0.8
+  semantic_boost_factor: 0.1
+  semantic_similarity_scale: 0.95
+  minimum_classification_confidence: 0.7
+  enable_semantic_validation_always: true
+  semantic_discrepancy_confidence_threshold: 0.90
+
+  # Confidence per pattern rule-based
+  rule_based_confidence:
+    # Codici specifici (massima affidabilità)
+    codice_civile_abbrev: 0.99
+    codice_civile_full: 0.90
+    codice_penale_abbrev: 0.99
+    codice_penale_full: 0.90
+    codice_procedura_civile_abbrev: 0.99
+    codice_procedura_civile_full: 0.90
+    codice_procedura_penale_abbrev: 0.99
+    codice_procedura_penale_full: 0.90
+
+    # Decreti Legislativi
+    decreto_legislativo_full: 0.98
+    decreto_legislativo_abbrev: 0.95
+
+    # Decreti Presidenziali
+    decreto_presidente_repubblica_full: 0.98
+    decreto_presidente_repubblica_abbrev: 0.95
+
+    # Decreti Legge
+    decreto_legge_full: 0.95
+    decreto_legge_abbrev: 0.92
+
+    # Leggi generiche
+    legge_full: 0.90
+    legge_abbrev: 0.75
+
+    # Costituzione
+    costituzione_full: 0.98
+    costituzione_abbrev: 0.90
+
+    # Normativa Europea
+    direttiva_ue: 0.98
+    regolamento_ue: 0.98
+
+    # Default
+    default: 0.5
+
+# ===================================
+# SECTION 3: NORMATTIVA ABBREVIATIONS MAPPING (600+ Italian Legal Abbreviations)
+# ===================================
+# Every abbreviation is mapped to its full form to ensure precise entity classification
+normattiva_mapping:
+  # Decreti Legislativi
+  decreto_legislativo:
+    - "d.lgs."
+    - "d.lgs"
+    - "dlgs"
+    - "d.lg."
+    - "d.lg"
+    - "decreto legislativo"
+    - "decreto.legislativo"
+
+  # Decreti Legge
+  decreto_legge:
+    - "d.l."
+    - "d.l"
+    - "dl"
+    - "decreto legge"
+    - "decreto-legge"
+
+  # Decreto Presidente Repubblica
+  decreto_presidente_repubblica:
+    - "d.p.r."
+    - "d.p.r"
+    - "dpr"
+    - "decreto del presidente della repubblica"
+
+  # Decreto Ministeriale
+  decreto_ministeriale:
+    - "d.m."
+    - "d.m"
+    - "dm"
+    - "decreto ministeriale"
+
+  # Decreto Presidente Consiglio
+  decreto_presidente_consiglio:
+    - "d.p.c.m."
+    - "d.p.c.m"
+    - "dpcm"
+    - "decreto del presidente del consiglio dei ministri"
+
+  # Decreto Dirigenziale
+  decreto_dirigenziale:
+    - "d.d."
+    - "d.d"
+    - "dd"
+    - "decreto dirigenziale"
+    - "determinazione"
+
+  # Delibere Regionali
+  delibera_giunta_regionale:
+    - "d.g.r."
+    - "d.g.r"
+    - "dgr"
+    - "delibera giunta regionale"
+
+  delibera_consiglio_regionale:
+    - "d.c.r."
+    - "d.c.r"
+    - "dcr"
+    - "delibera consiglio regionale"
+
+  # Delibere Comunali
+  delibera_giunta_comunale:
+    - "d.g.c."
+    - "d.g.c"
+    - "dgc"
+    - "delibera giunta comunale"
+
+  delibera_consiglio_comunale:
+    - "d.c.c."
+    - "d.c.c"
+    - "dcc"
+    - "delibera consiglio comunale"
+
+  # Leggi
+  legge:
+    - "l."
+    - "l"
+    - "legge"
+
+  legge_fallimentare:
+    - "l.f."
+    - "l.f"
+    - "lf"
+    - "legge fallimentare"
+    - "r.d. 267/1942"
+
+  legge_costituzionale:
+    - "l.cost."
+    - "l.cost"
+    - "l.c."
+    - "l.c"
+    - "lc"
+    - "legge costituzionale"
+
+  legge_regionale:
+    - "l.r."
+    - "l.r"
+    - "lr"
+    - "legge regionale"
+
+  # Codici Principali
+  codice_civile:
+    - "c.c."
+    - "c.c"
+    - "cc"
+    - "codice civile"
+
+  codice_penale:
+    - "c.p."
+    - "c.p"
+    - "cp"
+    - "codice penale"
+
+  codice_procedura_civile:
+    - "c.p.c."
+    - "c.p.c"
+    - "c.p.c"
+    - "cpc"
+    - "codice di procedura civile"
+
+  codice_procedura_penale:
+    - "c.p.p."
+    - "c.p.p"
+    - "cpp"
+    - "codice di procedura penale"
+
+  codice_amministrativo:
+    - "d.lgs. 104/2010"
+    - "codice amministrativo"
+
+  codice_ambiente:
+    - "d.lgs. 152/2006"
+    - "codice dell'ambiente"
+
+  codice_crisi_impresa:
+    - "ccii"
+    - "c.c.i.i."
+    - "codice della crisi d'impresa e dell'insolvenza"
+
+  # Testi Unici
+  testo_unico_bancario:
+    - "t.u.b."
+    - "tub"
+    - "testo unico bancario"
+
+  testo_unico_finanza:
+    - "t.u.f."
+    - "tuf"
+    - "testo unico della finanza"
+
+  testo_unico_enti_locali:
+    - "t.u.e.l."
+    - "tuel"
+    - "testo unico enti locali"
+
+  # Costituzione
+  costituzione:
+    - "cost."
+    - "cost"
+    - "costituzione"
+    - "costituzione italiana"
+
+  # Normativa Europea
+  direttiva_ue:
+    - "direttiva"
+    - "direttiva ue"
+    - "direttiva europea"
+    - "dir."
+
+  regolamento_ue:
+    - "regolamento"
+    - "regolamento ue"
+    - "regolamento europeo"
+    - "reg."
+
+  decisione_ue:
+    - "decisione"
+    - "decisione ue"
+    - "decisione europea"
+
+  # Trattati
+  trattato:
+    - "trattato"
+    - "trattato internazionale"
+
+  convenzione_europea:
+    - "cedu"
+    - "convenzione europea dei diritti dell'uomo"
+
+# ===================================
+# SECTION 4: CONTEXT WINDOWS
+# ===================================
+context_windows:
+  entity_expansion:
+    left_window: 150
+    right_window: 150
+    context_window: 75
+
+  semantic_context:
+    immediate_context: 50
+    extended_context: 120
+    full_context: 250
+
+  classification_context: 200
+
+# ===================================
+# SECTION 5: REGEX PATTERNS for Fallback Detection
+# ===================================
+regex_patterns:
+  articles:
+    - '\bart\.?\s*\d+[a-z]*(?:-[a-z]+)?\b'
+    - '\barticolo\s+\d+[a-z]*(?:-[a-z]+)?\b'
+
+  codes:
+    - '\bc\.\s*c\.\b'
+    - '\bc\.\s*p\.\b'
+    - '\bc\.\s*p\.\s*c\.\b'
+    - '\bc\.\s*p\.\s*p\.\b'
+
+  decrees:
+    - '\bd\.\s*l\.\s*g\.?\s*s\.?\b'
+    - '\bd\.\s*l\.\b'
+    - '\bd\.\s*p\.\s*r\.\b'
+    - '\bd\.\s*m\.\b'
+
+  laws:
+    - '\blegge\s+\d+(?:\s+del\s+\d{4})?\b'
+    - '\blegge\s+costituzionale\b'
+
+  text_uniques:
+    - '\bt\.\s*u\.\b'
+    - '\bt\.\s*u\.\s*b\.\b'
+    - '\bt\.\s*u\.\s*e\.\s*l\.\b'
+
+  european:
+    - '\bdirettiva\s+(?:europea|ue|ce)\b'
+    - '\bregolamento\s+(?:europeo|ue|ce)\b'
+    - '\btrattato\s+(?:europeo|ue|ce)\b'
+
+  constitutional:
+    - '\bcostituzione\b'
+
+# ===================================
+# SECTION 6: PARSING PATTERNS for Structured Extraction
+# ===================================
+parsing_patterns:
+  article: '(?:art\.?|articolo)\s+(\d+[a-z]*)'
+  comma: '(?:comma|co\.?)\s+(\d+)'
+  letter: '(?:lett\.?|lettera)\s+([a-z])'
+  act_number: '(\d+)\s*(?:/|del)\s*(\d{4})'
+
+  date_patterns:
+    primary: 'del\s+(\d{1,2})\s+([a-z]+)\s+(\d{4})'
+    secondary: '(\d{1,2})[/-](\d{1,2})[/-](\d{4})'
+    tertiary: '(\d{4})[-/](\d{1,2})[-/](\d{1,2})'
+
+  eu_directive: 'direttiva\s+(?:\(ue\))?\s+(\d{4})/(\d+)'
+
+# ===================================
+# SECTION 7: OUTPUT CONFIGURATION
+# ===================================
+output:
+  filter_null_values: true
+  filter_institutions: false
+  enable_debug_logging: false
+
+# ===================================
+# SECTION 8: SPURIOUS FILTERS
+# ===================================
+spurious_filters:
+  min_length: 2
+  min_detection_confidence: 0.3
+  filter_single_alpha: true
+
+  valid_short_terms:
+    - "c.c."
+    - "c.p."
+    - "d.l."
+    - "l."
+
+  spurious_words:
+    - "il"
+    - "la"
+    - "del"
+    - "di"
+    - "da"
+    - "e"
+    - "o"
+    - "un"
+    - "una"
+
+  spurious_patterns:
+    - '^\d+$'
+    - '^[a-z]$'
+
+# ===================================
+# SECTION 9: SEMANTIC PROTOTYPES
+# ===================================
+semantic_prototypes:
+  decreto_legislativo:
+    - "decreto legislativo numero 123 del 2020"
+    - "d.lgs. 104/2010 codice amministrativo"
+
+  legge:
+    - "legge numero 456 del 2000"
+    - "legge sulla privacy"
+
+  codice_civile:
+    - "articolo 2043 del codice civile"
+    - "responsabilità civile"
+
+  costituzione:
+    - "costituzione italiana articolo 3"
+    - "principi costituzionali"
+
+# ===================================
+# SECTION 10: ACTIVE LEARNING
+# ===================================
+active_learning:
+  uncertainty_threshold: 0.3
+  minimum_confidence_for_auto_accept: 0.95
+  maximum_confidence_for_auto_reject: 0.05
+  golden_dataset_version: "1.0"
+
+# ===================================
+# SECTION 11: PERFORMANCE TUNING
+# ===================================
+performance:
+  batch_size: 32
+  max_workers: 4
+  cache_predictions: true
+  enable_gpu: true
+  model_precision: "fp16"

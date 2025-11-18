@@ -1,0 +1,402 @@
+# Knowledge Graph Configuration
+# =============================
+# Multi-source enrichment settings for intent classification
+# Hot-reloadable: changes applied on next request
+
+neo4j:
+  # Connection settings
+  uri: "${NEO4J_URI:bolt://localhost:7687}"
+  username: "${NEO4J_USERNAME:neo4j}"
+  password: "${NEO4J_PASSWORD}"
+  database: "${NEO4J_DATABASE:merl_t}"
+
+  # Connection pooling
+  max_pool_size: 50
+  connection_timeout_ms: 5000
+  execution_timeout_ms: 10000
+
+  # Query optimization
+  trust: "TRUST_SYSTEM_CA_SIGNED_CERTIFICATES"
+  encrypted: true
+
+redis:
+  # Connection settings
+  host: "${REDIS_HOST:localhost}"
+  port: "${REDIS_PORT:6379}"
+  db: 1
+  password: "${REDIS_PASSWORD:null}"
+
+  # Connection pooling
+  max_connections: 50
+  socket_connect_timeout: 3
+  socket_timeout: 3
+
+  # Redis config
+  ssl: false
+  ssl_certfile: null
+  ssl_keyfile: null
+
+# ==========================================
+# Cache Configuration
+# ==========================================
+
+cache:
+  # TTL for cached enriched contexts (24 hours)
+  ttl_seconds: 86400
+
+  # Cache key patterns
+  key_prefix: "kg_enrich"
+
+  # Invalidation triggers
+  invalidate_on_normattiva_sync: true
+  invalidate_on_rlcf_update: true
+
+  # Fallback behavior
+  fallback_to_query_if_cache_down: true
+  allow_stale_cache: false
+
+# ==========================================
+# Dynamic Quorum Thresholds (RLCF)
+# ==========================================
+
+rlcf:
+  # Different thresholds for different source types
+  quorum_thresholds:
+    norma:
+      quorum_experts_required: 3
+      authority_threshold: 0.80
+      quorum_rule: "need_any_3_OR_1_magistrato"
+
+    sentenza:
+      quorum_experts_required: 4
+      authority_threshold: 0.85
+      quorum_rule: "need_4_experts_AND_1_magistrato"
+
+    dottrina:
+      quorum_experts_required: 5
+      authority_threshold: 0.75
+      quorum_rule: "need_5_experts_OR_2_academics"
+
+    contribution:
+      quorum_experts_required: null  # Uses community voting
+      authority_threshold: null
+      quorum_rule: "community_votes_GTE_10_net_upvotes"
+
+  # RLCF feedback weighting
+  authority_weights:
+    magistrato: 1.5
+    academic: 1.2
+    legal_expert: 1.0
+    community_user: 0.5
+
+# ==========================================
+# Source Trust & Confidence Mappings
+# ==========================================
+
+sources:
+  normattiva:
+    source_type: "official"
+    base_confidence: 1.0
+    description: "Official Italian legislation database"
+    update_frequency: "daily"
+
+  cassazione:
+    source_type: "official"
+    base_confidence: 0.95
+    description: "Supreme Court of Cassation registry"
+    update_frequency: "monthly"
+
+  tar:
+    source_type: "official"
+    base_confidence: 0.90
+    description: "Administrative Appeals Court"
+    update_frequency: "quarterly"
+
+  corte_costituzionale:
+    source_type: "official"
+    base_confidence: 0.95
+    description: "Constitutional Court of Italy"
+    update_frequency: "monthly"
+
+  curated_doctrine:
+    source_type: "curated"
+    base_confidence: 0.75
+    description: "Expert-curated academic sources (Bianca, De Nova, etc)"
+    update_frequency: "manual"
+    whitelist_authors:
+      - "Bianca"
+      - "De Nova"
+      - "Bettoni"
+      - "Cannada-Bartoli"
+
+  community_contribution:
+    source_type: "community"
+    base_confidence: 0.60
+    description: "Community-submitted and voted contributions"
+    update_frequency: "continuous"
+    voting_window_days: 7
+    auto_approval_threshold: 10  # net upvotes
+
+  rlcf_feedback:
+    source_type: "community"
+    base_confidence: "dynamic"
+    description: "Aggregated expert feedback via RLCF"
+    update_frequency: "continuous"
+
+# ==========================================
+# Query Configuration
+# ==========================================
+
+queries:
+  # Limits for query results
+  norms_limit: 10
+  sentenze_limit: 5
+  dottrina_limit: 5
+  contributions_limit: 3
+
+  # Timeouts (milliseconds)
+  norm_query_timeout_ms: 3000
+  sentenza_query_timeout_ms: 5000
+  dottrina_query_timeout_ms: 2000
+  contribution_query_timeout_ms: 2000
+
+  # Minimum confidence thresholds
+  min_confidence_norms: 0.7
+  min_confidence_sentenze: 0.75
+  min_confidence_dottrina: 0.6
+  min_confidence_contributions: 0.5
+
+  # Filtering
+  exclude_controversial_by_default: false
+  include_archived_content: false
+
+# ==========================================
+# Normattiva Synchronization
+# ==========================================
+
+normattiva_sync:
+  # Sync schedule
+  cron_schedule: "0 2 * * *"  # 2am daily
+
+  # API configuration
+  api_base_url: "${NORMATTIVA_API_URL:https://www.normattiva.it/api}"
+  api_timeout_ms: 30000
+
+  # Sync behavior
+  batch_size: 100
+  max_retries: 3
+  retry_delay_seconds: 60
+
+  # Archive management
+  archive_after_days: 365
+  keep_current_only: false
+
+  # Deduplication
+  use_hash_check: true
+  hash_algorithm: "sha256"
+
+# ==========================================
+# Controversy Management
+# ==========================================
+
+controversy:
+  # Flagging rules
+  flag_rlcf_conflict_threshold: 0.60  # If RLCF consensus < 0.60 from official
+  flag_competing_interpretations: true
+  flag_overruled_precedents: true
+
+  # Visibility
+  show_flags_to_users: true
+  show_flags_to_experts_only: false
+  show_conflicting_opinions: true
+
+  # Resolution
+  expert_review_required: false
+  auto_resolve_if_no_updates: "90d"  # 90 days
+
+# ==========================================
+# Community Contributions
+# ==========================================
+
+contributions:
+  # Submission rules
+  allow_anonymous: false
+  require_email_verification: true
+  max_file_size_mb: 50
+  allowed_file_types: [".pdf", ".docx", ".txt", ".md"]
+
+  # Voting
+  voting_window_days: 7
+  auto_approve_threshold: 10  # net upvotes
+  auto_reject_if_negative: true
+
+  # Expert review escalation
+  expert_review_required_if_controversial: true
+  expert_review_required_if_contradicts_norm: false
+  expert_review_sla_days: 14
+
+  # Spam/quality filters
+  min_content_length_words: 100
+  max_content_length_words: 50000
+  enable_plagiarism_check: true
+  plagiarism_threshold: 0.85
+
+# ==========================================
+# Quality Metrics
+# ==========================================
+
+quality:
+  # Metrics computation
+  compute_metrics_schedule: "0 3 * * *"  # 3am daily
+  compute_metrics_on_demand: true
+
+  # Thresholds for alerts
+  alert_nodes_below_confidence: 0.5
+  alert_orphaned_nodes_above: 100
+  alert_controversy_ratio_above: 0.05  # 5%
+  alert_staging_queue_over_days: 7
+
+  # Completeness scoring
+  minimum_edges_per_norm: 2
+  minimum_doctrine_per_materia: 3
+  minimum_sentenze_per_year: 10
+
+  # Reporting
+  email_metrics_to: "${QA_EMAIL:qa@merl-t.org}"
+  include_detailed_analysis: true
+  store_metrics_history: true
+
+# ==========================================
+# Logging & Monitoring
+# ==========================================
+
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  format: "json"  # json or standard
+
+  # Log what
+  log_queries: false  # Set true to log all Cypher queries (performance impact)
+  log_cache_hits: true
+  log_errors: true
+  log_warnings: true
+
+monitoring:
+  # Metrics collection
+  collect_query_latencies: true
+  collect_cache_stats: true
+  collect_error_rates: true
+
+  # Alerting
+  alert_query_timeout: true
+  alert_redis_down: true
+  alert_neo4j_down: true
+  alert_high_error_rate: true  # >5% errors
+
+# ==========================================
+# Feature Flags
+# ==========================================
+
+features:
+  # Enrichment features
+  enable_norm_enrichment: true
+  enable_sentenza_enrichment: true
+  enable_doctrine_enrichment: true
+  enable_contribution_enrichment: true
+
+  # RLCF features
+  enable_rlcf_quorum: true
+  enable_controversy_flagging: true
+  enable_dynamic_quorum: true
+
+  # Community features
+  enable_community_contributions: true
+  enable_community_voting: true
+  enable_expert_review: true
+
+  # Experimental
+  enable_ai_content_analysis: false
+  enable_anomaly_detection: false
+  enable_graph_embeddings: false
+
+# ==========================================
+# Performance Tuning
+# ==========================================
+
+performance:
+  # Query optimization
+  enable_query_caching: true
+  cache_query_results: true
+
+  # Parallel execution
+  parallel_source_queries: true
+  max_parallel_queries: 4
+
+  # Batch processing
+  batch_update_size: 100
+  batch_audit_size: 1000
+
+  # Resource limits
+  max_context_enrichment_time_ms: 5000
+  max_memory_per_enrichment_mb: 256
+
+# ==========================================
+# Integration Points
+# ==========================================
+
+integrations:
+  # Intent classifier
+  intent_classifier:
+    enabled: true
+    use_enriched_context: true
+
+  # NER pipeline
+  ner_pipeline:
+    enabled: true
+    send_feedback_to_ner: true
+
+  # RLCF framework
+  rlcf_framework:
+    enabled: true
+    push_conflicts_to_rlcf: true
+
+  # Expert modules
+  expert_modules:
+    enabled: true
+    broadcast_enrichment: true
+
+# ==========================================
+# Audit & Compliance
+# ==========================================
+
+audit:
+  # Auditing
+  enable_full_audit: true
+  audit_retention_days: 365
+
+  # Compliance
+  log_all_data_access: true
+  log_all_modifications: true
+  data_anonymization: false
+
+  # GDPR/Data Protection
+  enable_deletion_requests: true
+  enable_export_requests: true
+  deletion_deadline_days: 30
+
+# ==========================================
+# Development/Testing
+# ==========================================
+
+environment: "${ENV:production}"
+
+testing:
+  enabled: false
+  use_mock_neo4j: false
+  use_mock_redis: false
+  mock_data_path: "/test_data"
+
+development:
+  debug_mode: false
+  verbose_logging: false
+  hot_reload_config: true  # Reload config on file changes
+  reload_watch_interval_seconds: 60

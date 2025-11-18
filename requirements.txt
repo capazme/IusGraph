@@ -1,0 +1,19 @@
+# Core
+neo4j
+python-dotenv
+streamlit
+nest_asyncio
+
+# Document Reading
+pdfplumber
+PyPDF2
+python-docx
+
+# LLM and API interaction
+aiohttp
+structlog
+
+# Database (staging queue from unified_ingestion_pipeline)
+SQLAlchemy
+# Required for async postgresql connection
+asyncpg
